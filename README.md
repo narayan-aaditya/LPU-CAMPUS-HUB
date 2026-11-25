@@ -10,7 +10,7 @@
 LPU Campus Hub is a responsive, accessible, interactive web application developed to help university students and faculty members seamlessly access, filter, search, bookmark, and publish campus notices, circulars, examination schedules, fee updates, and placement drives.
 
 ### 🌐 Live Deployment
-- **Live Demo Link:** *(add your GitHub Pages link here after publishing)*
+- **Live Demo Link:  https://narayan-aaditya.github.io/LPU-CAMPUS-HUB/
 - **Offline Mode:** Fully functional simply by double-clicking `index.html` in any modern web browser without any local web server, database, or build tools.
 
 ---
@@ -69,7 +69,7 @@ LPU Campus Hub is a responsive, accessible, interactive web application develope
 - "Mark all as read" one-click action.
 
 ### 7. 👤 Complete Academic Profile & Customization
-- Default Student and Teacher profiles with placeholder details; the name and details are set in `js/config.js`.
+- Default Student and Teacher profiles with placeholder details; the name and details are set in `config.js`.
 - Profile completeness progress meter.
 - Profile photo upload with client-side canvas square thumbnail cropping and resizing.
 - Real-time sync: updating your name immediately updates the top bar, avatar initial, and dashboard greeting.
@@ -89,11 +89,11 @@ LPU Campus Hub is a responsive, accessible, interactive web application develope
 
 ## 🛡️ Architecture & Constraints Followed
 - **Demo data:** 5 sample notices (one per category) and 12 sample notifications.
-- **Images:** the LPU logos and campus photos are in the `images/` folder, listed in `js/config.js`.
+- **Images:** the LPU logos and campus photos are in the `images/` folder, listed in `config.js`.
 - **No External Libraries or CDNs:** Pure HTML5, CSS3, and Vanilla JavaScript.
 - **Browser Storage Safe:** All persistence is encapsulated through safe storage wrappers with in-memory fallbacks, preventing private/incognito mode exceptions.
 - **Short, Maintainable Functions:** Every file starts with a short overview and each group of code has one comment block (SECTION 1, SECTION 2 ...) explaining it. There are no comments on every line.
-- **Strict Separation of Config:** College names, contacts, and asset paths are isolated in `js/config.js`.
+- **Strict Separation of Config:** College names, contacts, and asset paths are isolated in `config.js`.
 - **Zero Inactive UI:** Every button, card, chip, and link performs an active function.
 
 ---
