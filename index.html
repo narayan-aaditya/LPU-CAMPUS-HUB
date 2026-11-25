@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LPU Campus Hub — Campus Notice & Circular Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Browser tab icon. Actual file used = config.js -> images.logoIcon (app.js applyBranding overrides this at startup) -->
+  <link rel="icon" type="image/png" href="images/logo-icon.png">
+</head>
+<body>
+
+  <!-- =========================================================================
+       1. GLOBAL FIXED TOP BAR
+       ========================================================================= -->
+  <header class="top-bar" id="topBar">
+    <!-- Left: Hamburger button & Logo Brand -->
+    <div class="top-bar-left">
+      <button type="button" class="hamburger-btn" onclick="toggleMobileSidebar()" aria-label="Toggle navigation menu">
+        ☰
+      </button>
+      <a href="#/home" class="brand-link" title="LPU Campus Hub Home">
+        <div class="logo-circle">
+          <!-- Small round logo in the top bar. To change it: replace images/logo-icon.png OR edit config.js -> images.logoIcon -->
+          <img src="images/logo-icon.png" alt="LPU Emblem">
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">LPU Campus Hub</span>
+          <span class="brand-subtitle">Notice & Circular Management</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Center: Search bar with rotating placeholder and filters panel -->
+    <div class="top-bar-search">
+      <div class="search-input-wrapper">
+        <button type="button" class="search-icon-btn" onclick="triggerGlobalSearch()" aria-label="Search">
+          🔍
+        </button>
+        <input type="text" id="globalSearchInput" placeholder="Try: End semester datesheet" autocomplete="off">
+        <button type="button" class="search-filters-btn" onclick="toggleSearchFiltersPanel(event)" aria-label="Toggle search filters">
+          <span>Filters</span> ▾
+        </button>
+      </div>
+
+      <!-- Search Filters Dropdown Panel -->
+      <div class="search-filters-panel" id="searchFiltersPanel">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label for="sfCategory">Category</label>
+            <select id="sfCategory">
+              <option value="all">All Categories</option>
+              <option value="Department">Department</option>
+              <option value="Exams">Exams</option>
+              <option value="Fees">Fees</option>
+              <option value="Events">Events</option>
+              <option value="Placement">Placement</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="sfPriority">Priority</label>
+            <select id="sfPriority">
+              <option value="all">All Priorities</option>
+              <option value="urgent">Urgent Only</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="sfPosted">Posted Within</label>
+            <select id="sfPosted">
+              <option value="any">Any Time</option>
+              <option value="today">Today</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="sfSort">Sort By</label>
+            <select id="sfSort">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="urgent">Urgent First</option>
+            </select>
+          </div>
+        </div>
+        <div class="filters-panel-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="clearSearchFilters()">Clear</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="applySearchFilters()">Apply Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Bell Notification & User Profile Menu -->
+    <div class="top-bar-right">
+      <button type="button" class="icon-btn-badge" onclick="navigateToHash('#/notifications')" title="Notifications">
+        <span>🔔</span>
+        <span class="badge-counter" id="headerNotifBadge" style="display: none;">0</span>
+      </button>
+
+      <div class="profile-btn-wrapper">
+        <button type="button" class="profile-btn" onclick="toggleProfileDropdown(event)" aria-label="User profile options">
+          <div class="avatar-circle" id="headerAvatar">
+            <span class="avatar-initial">W</span>
+          </div>
+          <div class="profile-info">
+            <span class="profile-name" id="headerUserName">TEAM WebX</span>
+            <span class="profile-role" id="headerUserRole">Student</span>
+          </div>
+          <span>▾</span>
+        </button>
+
+        <div class="dropdown-menu" id="profileDropdownMenu">
+          <button type="button" class="dropdown-item" onclick="navigateToHash('#/profile')">
+            <span>👤</span> <span>My Profile</span>
+          </button>
+          <button type="button" class="dropdown-item" onclick="navigateToHash('#/saved')">
+            <span>⭐</span> <span>Saved Notices</span>
+          </button>
+          <button type="button" class="dropdown-item" onclick="navigateToHash('#/settings')">
+            <span>⚙️</span> <span>Settings</span>
+          </button>
+          <div class="dropdown-divider"></div>
+          <button type="button" class="dropdown-item" onclick="logoutUser()">
+            <span>🚪</span> <span>Log Out</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Backdrop -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+
+  <!-- =========================================================================
+       2. GLOBAL LEFT SIDEBAR NAVIGATION
+       ========================================================================= -->
+  <aside class="left-sidebar" id="leftSidebar">
+    <nav class="sidebar-nav" id="sidebarNav">
+      <a href="#/home" class="nav-item" data-route="home">
+        <div class="nav-left">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </div>
+      </a>
+      <a href="#/notices" class="nav-item" data-route="notices">
+        <div class="nav-left">
+          <span class="nav-icon">📢</span>
+          <span>Notices</span>
+        </div>
+      </a>
+      <a href="#/notifications" class="nav-item" data-route="notifications">
+        <div class="nav-left">
+          <span class="nav-icon">🔔</span>
+          <span>Notifications</span>
+        </div>
+        <span class="nav-badge" id="sidebarNotifBadge" style="display: none;">0</span>
+      </a>
+      <a href="#/calendar" class="nav-item" data-route="calendar">
+        <div class="nav-left">
+          <span class="nav-icon">📅</span>
+          <span>Calendar</span>
+        </div>
+      </a>
+      <a href="#/profile" class="nav-item" data-route="profile">
+        <div class="nav-left">
+          <span class="nav-icon">👤</span>
+          <span>Profile</span>
+        </div>
+      </a>
+      <a href="#/settings" class="nav-item" data-route="settings">
+        <div class="nav-left">
+          <span class="nav-icon">⚙️</span>
+          <span>Settings</span>
+        </div>
+      </a>
+      <a href="#/contact" class="nav-item" data-route="contact">
+        <div class="nav-left">
+          <span class="nav-icon">💬</span>
+          <span>Contact Us / Help</span>
+        </div>
+      </a>
+    </nav>
+
+    <!-- Sidebar Bottom: Mountain Art, Credit, Dark Mode Switch -->
+    <div class="sidebar-footer">
+      <!-- Sidebar art: change it in js/config.js -> images.sidebarArt -->
+      <div class="sidebar-art-box css-mountain-art" style="background-image: url('images/sidebar-art.jpg');">
+        <span class="art-caption">Stay informed, Stay ahead</span>
+      </div>
+
+      <div class="sidebar-credit">
+        <span class="sidebar-credit-love">Made with love ❤️</span>
+        <span class="sidebar-team-webx">TEAM WebX</span>
+      </div>
+
+      <div class="sidebar-dark-toggle">
+        <span>Dark Mode</span>
+        <label class="switch" aria-label="Toggle dark mode">
+          <input type="checkbox" id="sidebarDarkSwitch" onchange="toggleDarkMode(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       3. MAIN CONTENT CONTAINER (PAGES)
+       ========================================================================= -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Global Breadcrumbs Bar (Visible on all pages except Home and Login) -->
+    <div class="breadcrumb-bar" id="breadcrumbBar" style="display: none;">
+      <button type="button" class="back-btn" onclick="goBackHistory()">
+        ← Back
+      </button>
+      <div class="breadcrumb-trail" id="breadcrumbTrail">
+        <!-- Injected via app.js -->
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         PAGE: LOGIN (Initial Screen)
+         ======================================================================= -->
+    <section class="page" id="pageLogin">
+      <div class="login-card">
+        <!-- Big logo on the login screen. To change it: replace images/logo.png OR edit config.js -> images.logo -->
+        <img src="images/logo.png" alt="LPU Campus Hub Logo" class="login-logo">
+        <h1 class="login-heading">LPU Campus Hub</h1>
+        <p class="login-subtitle">Campus Notice & Circular Management System</p>
+
+        <form class="login-form" onsubmit="loginUser(document.getElementById('loginNameInput').value, document.getElementById('loginRoleSelect').value); return false;">
+          <div class="form-group">
+            <label for="loginNameInput">Your Name</label>
+            <input type="text" id="loginNameInput" placeholder="Enter your full name (defaults to Guest)">
+          </div>
+          <div class="form-group">
+            <label for="loginRoleSelect">Select Role</label>
+            <select id="loginRoleSelect">
+              <option value="Student">Student</option>
+              <option value="Teacher">Teacher (Faculty / Staff)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+            Enter Campus Hub →
+          </button>
+        </form>
+
+        <div class="demo-divider">or try the demo</div>
+
+        <div class="demo-buttons-row">
+          <button type="button" class="btn btn-secondary" onclick="loginAsDemoStudent()">
+            🎓 Try as Student
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="loginAsDemoTeacher()">
+            👨‍🏫 Try as Teacher
+          </button>
+        </div>
+
+        <p class="login-quote" id="loginQuote">"Big dreams need good information. Stay connected! 🚀"</p>
+        <p class="login-disclaimer">Demo mode: data is saved in this browser only.</p>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: HOME
+         ======================================================================= -->
+    <section class="page" id="pageHome">
+      <!-- Campus Photo Banner -->
+      <div class="home-banner">
+        <div class="banner-bg" id="homeBannerBg"></div>
+        <div class="banner-overlay">
+          <h1 class="banner-greeting" id="homeGreeting">Welcome to LPU Campus Hub! 👋</h1>
+          <p class="banner-subtitle">Official university notices, datesheets, examination circulars, fee updates, and placement drives in one place.</p>
+        </div>
+      </div>
+
+      <!-- 4 Stat Cards: Total, Urgent, This Week, New -->
+      <div class="home-stats-grid">
+        <div class="stat-card" onclick="navigateToHash('#/notices/all')" tabindex="0" role="button" aria-label="View all notices">
+          <div class="stat-icon-circle stat-icon-total">📢</div>
+          <div class="stat-info">
+            <span class="stat-num" id="statTotalCount">5</span>
+            <span class="stat-label">Total Notices</span>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="navigateToHash('#/notices/urgent')" tabindex="0" role="button" aria-label="View urgent notices">
+          <div class="stat-icon-circle stat-icon-urgent">⚡</div>
+          <div class="stat-info">
+            <span class="stat-num" id="statUrgentCount">3</span>
+            <span class="stat-label">Urgent Notices</span>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="navigateToHash('#/notices/week')" tabindex="0" role="button" aria-label="View notices posted this week">
+          <div class="stat-icon-circle stat-icon-week">📅</div>
+          <div class="stat-info">
+            <span class="stat-num" id="statWeekCount">18</span>
+            <span class="stat-label">This Week</span>
+          </div>
+        </div>
+
+        <div class="stat-card" onclick="navigateToHash('#/notices/new')" tabindex="0" role="button" aria-label="View new notices">
+          <div class="stat-icon-circle stat-icon-new">🆕</div>
+          <div class="stat-info">
+            <span class="stat-num" id="statNewCount">8</span>
+            <span class="stat-label">New Notices</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Home Layout 2 Columns: Latest Notices vs Widgets -->
+      <div class="home-two-col">
+        <!-- Left: Latest Notices with Professor's Must-Have Category Filter Buttons -->
+        <div class="latest-notices-box">
+          <div class="box-header-row">
+            <h2 class="box-title">Latest Notices & Circulars</h2>
+            <a href="#/notices" class="box-view-all">View All Notices →</a>
+          </div>
+
+          <!-- Professor's Must-Have Category Filter Buttons -->
+          <div class="category-filter-bar" id="homeCategoryFilters">
+            <button type="button" class="cat-btn active" data-cat="all" onclick="renderHomeLatestNotices('all')">All</button>
+            <button type="button" class="cat-btn" data-cat="Department" onclick="renderHomeLatestNotices('Department')">Department</button>
+            <button type="button" class="cat-btn" data-cat="Exams" onclick="renderHomeLatestNotices('Exams')">Exams</button>
+            <button type="button" class="cat-btn" data-cat="Fees" onclick="renderHomeLatestNotices('Fees')">Fees</button>
+            <button type="button" class="cat-btn" data-cat="Events" onclick="renderHomeLatestNotices('Events')">Events</button>
+            <button type="button" class="cat-btn" data-cat="Placement" onclick="renderHomeLatestNotices('Placement')">Placement</button>
+          </div>
+
+          <!-- Top 6 Notice Cards Grid -->
+          <div class="cards-grid" id="homeLatestGrid">
+            <!-- Populated via notices.js -->
+          </div>
+        </div>
+
+        <!-- Right: Urgent Highlight, Quick Links, Recently Viewed, Quote, Stay Connected -->
+        <div class="home-widgets-col">
+          <!-- Urgent Notice Widget -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <h3 class="widget-title">⚡ Urgent Notice</h3>
+              <a href="#/notices/urgent" class="box-view-all" style="font-size: 12px;">View All</a>
+            </div>
+            <div id="homeUrgentBox">
+              <!-- Injected via notices.js -->
+            </div>
+          </div>
+
+          <!-- Quick Links Widget -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <h3 class="widget-title">🔗 Quick Portals</h3>
+            </div>
+            <div class="quick-links-list">
+              <a href="#/calendar" class="quick-link-btn">
+                <span>📅 Academic Calendar</span> <span>→</span>
+              </a>
+              <a href="#/notices/exams" class="quick-link-btn">
+                <span>📝 Examination Portal</span> <span>→</span>
+              </a>
+              <a href="#/notices/fees" class="quick-link-btn">
+                <span>💳 Fee Payment Updates</span> <span>→</span>
+              </a>
+              <a href="#/contact" class="quick-link-btn">
+                <span>💬 Contact Support Desk</span> <span>→</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Recently Viewed Widget -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <h3 class="widget-title">🕒 Recently Viewed</h3>
+            </div>
+            <div class="recent-list" id="homeRecentList">
+              <!-- Injected via notices.js -->
+            </div>
+          </div>
+
+          <!-- Quote of the Day Widget -->
+          <div class="widget-card quote-card">
+            <div class="widget-header">
+              <h3 class="widget-title">💡 Quote of the Day</h3>
+            </div>
+            <p class="quote-text" id="quoteWidgetText">"Big dreams need good information. Stay connected! 🚀"</p>
+            <div class="quote-foot">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="nextQuote()">Next Quote ↻</button>
+            </div>
+          </div>
+
+          <!-- Stay Connected Promotional Card -->
+          <div class="stay-connected-card" id="stayConnectedCard">
+            <span class="handwriting-note">Big dreams need good information</span>
+            <h3 class="stay-title">Stay Connected</h3>
+            <p class="stay-desc">Need assistance or official grievance redressal? Contact the university administrative helpdesk directly.</p>
+            <button type="button" class="btn btn-primary btn-sm" onclick="navigateToHash('#/contact')">Contact Us →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: NOTICES (Fused Categories, Category Cards Row, Professor's Filters)
+         ======================================================================= -->
+    <section class="page" id="pageNotices">
+      <!-- Toolbar -->
+      <div class="notices-toolbar">
+        <div class="page-title-row">
+          <h1 class="page-main-title">Campus Notices & Circulars</h1>
+          <a href="#/saved" class="saved-link-badge">⭐ Saved <span id="noticesSavedCountBadge">(5)</span></a>
+        </div>
+
+        <div class="toolbar-actions">
+          <!-- Teacher-only buttons -->
+          <button type="button" class="btn btn-primary teacher-only" onclick="navigateToHash('#/post')" style="display: none;">
+            + Post Notice
+          </button>
+          <button type="button" class="btn btn-secondary teacher-only" onclick="navigateToHash('#/myposts')" style="display: none;">
+            My Posts
+          </button>
+
+          <!-- Manage Data Dropdown -->
+          <div class="manage-menu-wrapper">
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('noticesManageDropdown').classList.toggle('open')" aria-label="Manage notices data">
+              <span>⚙️ Manage Data</span> ▾
+            </button>
+            <div class="manage-dropdown" id="noticesManageDropdown">
+              <button type="button" class="dropdown-item" onclick="this.parentElement.classList.remove('open'); resetNoticesData('hide_demo');">
+                <span>🚫</span> <span>Remove demo items</span>
+              </button>
+              <button type="button" class="dropdown-item" onclick="this.parentElement.classList.remove('open'); resetNoticesData('remove_all');">
+                <span>🗑️</span> <span>Remove everything</span>
+              </button>
+              <button type="button" class="dropdown-item" onclick="this.parentElement.classList.remove('open'); resetNoticesData('restore');">
+                <span>🔄</span> <span>Restore demo only</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sort Select -->
+          <select id="noticesSortSelect" onchange="handleNoticesSortChange()" class="btn btn-secondary" style="padding: 8px 12px;">
+            <option value="newest">Sort: Newest First</option>
+            <option value="oldest">Sort: Oldest First</option>
+            <option value="urgent">Sort: Urgent First</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category Cards Row (Live count indicators) -->
+      <div class="category-cards-row">
+        <div class="category-card active" data-cat="all" onclick="setNoticesFilter('all')">
+          <div class="cat-icon-circle">📢</div>
+          <span class="cat-card-name">All Notices</span>
+          <span class="cat-count">5 circulars</span>
+        </div>
+        <div class="category-card" data-cat="department" onclick="setNoticesFilter('department')">
+          <div class="cat-icon-circle">🏛️</div>
+          <span class="cat-card-name">Department</span>
+          <span class="cat-count">5 circulars</span>
+        </div>
+        <div class="category-card" data-cat="exams" onclick="setNoticesFilter('exams')">
+          <div class="cat-icon-circle">📝</div>
+          <span class="cat-card-name">Exams</span>
+          <span class="cat-count">5 circulars</span>
+        </div>
+        <div class="category-card" data-cat="fees" onclick="setNoticesFilter('fees')">
+          <div class="cat-icon-circle">💳</div>
+          <span class="cat-card-name">Fees</span>
+          <span class="cat-count">5 circulars</span>
+        </div>
+        <div class="category-card" data-cat="events" onclick="setNoticesFilter('events')">
+          <div class="cat-icon-circle">🎪</div>
+          <span class="cat-card-name">Events</span>
+          <span class="cat-count">5 circulars</span>
+        </div>
+        <div class="category-card" data-cat="placement" onclick="setNoticesFilter('placement')">
+          <div class="cat-icon-circle">💼</div>
+          <span class="cat-card-name">Placement</span>
+          <span class="cat-count">5 circulars</span>
+        </div>
+      </div>
+
+      <!-- Category Filter Buttons & Quick Chips Panel -->
+      <div class="notices-filter-panel">
+        <div class="filter-row-primary" id="noticesCategoryFilters">
+          <span style="font-size: 13px; font-weight: 700; color: var(--muted); margin-right: 4px;">Category:</span>
+          <button type="button" class="cat-btn active" data-cat="all" onclick="setNoticesFilter('all')">All</button>
+          <button type="button" class="cat-btn" data-cat="department" onclick="setNoticesFilter('department')">Department</button>
+          <button type="button" class="cat-btn" data-cat="exams" onclick="setNoticesFilter('exams')">Exams</button>
+          <button type="button" class="cat-btn" data-cat="fees" onclick="setNoticesFilter('fees')">Fees</button>
+          <button type="button" class="cat-btn" data-cat="events" onclick="setNoticesFilter('events')">Events</button>
+          <button type="button" class="cat-btn" data-cat="placement" onclick="setNoticesFilter('placement')">Placement</button>
+        </div>
+
+        <div class="filter-row-secondary">
+          <div class="quick-chips-row" id="noticesQuickChips">
+            <span style="font-size: 12px; font-weight: 600; color: var(--muted); margin-right: 4px;">Quick Filters:</span>
+            <button type="button" class="chip-btn" data-cat="urgent" onclick="setNoticesFilter('urgent')">⚡ Urgent Only</button>
+            <button type="button" class="chip-btn" data-cat="week" onclick="setNoticesFilter('week')">📅 This Week</button>
+            <button type="button" class="chip-btn" data-cat="new" onclick="setNoticesFilter('new')">🆕 New (Last 3 Days)</button>
+          </div>
+          <span class="notices-count-label" id="noticesCountHeader">Showing 5 notices</span>
+        </div>
+      </div>
+
+      <!-- Main Notices Grid -->
+      <div class="cards-grid" id="noticesGrid">
+        <!-- Injected via notices.js -->
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: NOTICE DETAILS
+         ======================================================================= -->
+    <section class="page" id="pageNoticeDetails">
+      <div id="noticeDetailsContent">
+        <!-- Injected via notices.js -->
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: SEARCH RESULTS
+         ======================================================================= -->
+    <section class="page" id="pageSearch">
+      <div class="search-results-header">
+        <h1 class="search-title-large" id="searchHeadingQuery">Search Results</h1>
+        <div class="active-filter-chips" id="searchActiveChips"></div>
+        <p class="search-count" id="searchResultCount" style="color: var(--muted); font-size: 13.5px;"></p>
+      </div>
+
+      <div class="cards-grid" id="searchResultsGrid">
+        <!-- Injected via app.js -->
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: NOTIFICATIONS CENTER
+         ======================================================================= -->
+    <section class="page" id="pageNotifications">
+      <div class="notif-container">
+        <div class="notif-toolbar">
+          <h1 class="page-main-title">Notification Center</h1>
+
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="markAllNotificationsAsRead()">
+              Mark all as read ✔️
+            </button>
+
+            <!-- Notifications Manage Data Menu -->
+            <div class="manage-menu-wrapper">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('notifsManageDropdown').classList.toggle('open')">
+                <span>⚙️ Manage</span> ▾
+              </button>
+              <div class="manage-dropdown" id="notifsManageDropdown">
+                <button type="button" class="dropdown-item" onclick="this.parentElement.classList.remove('open'); resetNotifsData('hide_demo');">
+                  <span>🚫</span> <span>Remove demo items</span>
+                </button>
+                <button type="button" class="dropdown-item" onclick="this.parentElement.classList.remove('open'); resetNotifsData('remove_all');">
+                  <span>🗑️</span> <span>Remove everything</span>
+                </button>
+                <button type="button" class="dropdown-item" onclick="this.parentElement.classList.remove('open'); resetNotifsData('restore');">
+                  <span>🔄</span> <span>Restore demo only</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <!-- Notification Search Bar -->
+          <div class="notif-search-box">
+            <input type="text" id="notifSearchInput" placeholder="Search notifications..." oninput="renderNotificationsPage()">
+          </div>
+
+          <!-- Notification Filter Chips -->
+          <div class="notif-filters-row" id="notifFilterChips">
+            <button type="button" class="chip-btn active" data-filter="all" onclick="setNotifFilter('all')">All</button>
+            <button type="button" class="chip-btn" data-filter="unread" onclick="setNotifFilter('unread')">Unread</button>
+            <button type="button" class="chip-btn" data-filter="Urgent" onclick="setNotifFilter('Urgent')">⚡ Urgent</button>
+            <button type="button" class="chip-btn" data-filter="New" onclick="setNotifFilter('New')">🆕 New</button>
+            <button type="button" class="chip-btn" data-filter="Reminder" onclick="setNotifFilter('Reminder')">⏰ Reminder</button>
+            <button type="button" class="chip-btn" data-filter="System" onclick="setNotifFilter('System')">⚙️ System</button>
+          </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="notif-list" id="notificationsList">
+          <!-- Injected via pages.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: ACADEMIC CALENDAR
+         ======================================================================= -->
+    <section class="page" id="pageCalendar">
+      <div class="calendar-layout">
+        <!-- Left: Month Grid -->
+        <div class="calendar-card">
+          <div class="cal-header">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="prevCalendarMonth()">← Previous</button>
+            <h2 class="cal-title" id="calMonthYear">November 2026</h2>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="nextCalendarMonth()">Next →</button>
+          </div>
+
+          <div class="cal-weekdays">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+
+          <div class="cal-days-grid" id="calDaysGrid">
+            <!-- Injected via pages.js -->
+          </div>
+        </div>
+
+        <!-- Right: Notices on Selected Date -->
+        <div class="cal-details-card">
+          <h3 class="cal-details-title" id="calSelectedHeading">Circulars & Deadlines</h3>
+          <div id="calSelectedDetails">
+            <!-- Injected via pages.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: PROFILE
+         ======================================================================= -->
+    <section class="page" id="pageProfile">
+      <div class="profile-card">
+        <!-- Header Banner & Avatar -->
+        <div class="profile-header-banner">
+          <div class="profile-avatar-large" id="profileAvatarBox">
+            <span>W</span>
+          </div>
+          <div class="profile-header-meta">
+            <h2 class="prof-name" id="profileHeaderName">Aditya Sharma</h2>
+            <p class="prof-role"><span id="profileHeaderRole">Student</span> · <span id="profileHeaderDept">School of Computer Science & Engineering</span></p>
+
+            <div class="prof-actions-row">
+              <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+                Change Photo 📷
+                <input type="file" accept="image/*" style="display: none;" onchange="handleProfilePhotoUpload(event)">
+              </label>
+              <button type="button" class="btn btn-outline btn-sm" onclick="removeProfilePhoto()">Remove Photo</button>
+            </div>
+
+            <!-- Profile Completeness Meter -->
+            <div class="profile-meter-box">
+              <div class="meter-track">
+                <div class="meter-fill" id="profileMeterFill" style="width: 100%;"></div>
+              </div>
+              <span class="meter-label" id="profileMeterPercent">100% Complete</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Fields Form -->
+        <form id="profileStudentFields" onsubmit="saveProfileForm(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="profStudName">Full Name</label>
+              <input type="text" id="profStudName" required>
+            </div>
+            <div class="form-group">
+              <label for="profStudRoll">Roll Number</label>
+              <input type="text" id="profStudRoll">
+            </div>
+            <div class="form-group">
+              <label for="profStudReg">Registration Number</label>
+              <input type="text" id="profStudReg">
+            </div>
+            <div class="form-group">
+              <label for="profStudCourse">Course / Programme</label>
+              <input type="text" id="profStudCourse">
+            </div>
+            <div class="form-group">
+              <label for="profStudDept">Department / School</label>
+              <input type="text" id="profStudDept">
+            </div>
+            <div class="form-group">
+              <label for="profStudSection">Section</label>
+              <input type="text" id="profStudSection">
+            </div>
+            <div class="form-group">
+              <label for="profStudBatch">Batch</label>
+              <input type="text" id="profStudBatch">
+            </div>
+            <div class="form-group">
+              <label for="profStudSem">Semester</label>
+              <input type="text" id="profStudSem">
+            </div>
+            <div class="form-group">
+              <label for="profStudGender">Gender</label>
+              <select id="profStudGender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="profStudDob">Date of Birth</label>
+              <input type="date" id="profStudDob">
+            </div>
+            <div class="form-group">
+              <label for="profStudEmail">Student Email</label>
+              <input type="email" id="profStudEmail">
+            </div>
+            <div class="form-group">
+              <label for="profStudPhone">Mobile Phone</label>
+              <input type="tel" id="profStudPhone">
+            </div>
+            <div class="form-group full-width">
+              <label for="profStudAddress">Campus / Hostel Address</label>
+              <input type="text" id="profStudAddress">
+            </div>
+            <div class="form-group">
+              <label for="profStudCity">City</label>
+              <input type="text" id="profStudCity">
+            </div>
+            <div class="form-group">
+              <label for="profStudState">State</label>
+              <input type="text" id="profStudState">
+            </div>
+            <div class="form-group">
+              <label for="profStudPin">PIN Code</label>
+              <input type="text" id="profStudPin">
+            </div>
+            <div class="form-group">
+              <label for="profStudEmerName">Emergency Contact Person</label>
+              <input type="text" id="profStudEmerName">
+            </div>
+            <div class="form-group">
+              <label for="profStudEmerPhone">Emergency Phone</label>
+              <input type="tel" id="profStudEmerPhone">
+            </div>
+          </div>
+          <div class="form-actions-row">
+            <button type="submit" class="btn btn-primary btn-lg">Save Profile Changes 💾</button>
+            <button type="button" class="btn btn-secondary btn-lg" onclick="resetProfileToConfig()">Reset to config.js Defaults 🔄</button>
+          </div>
+        </form>
+
+        <!-- Teacher Fields Form -->
+        <form id="profileTeacherFields" style="display: none;" onsubmit="saveProfileForm(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="profTeachName">Full Name</label>
+              <input type="text" id="profTeachName" required>
+            </div>
+            <div class="form-group">
+              <label for="profTeachEmpId">Employee ID</label>
+              <input type="text" id="profTeachEmpId">
+            </div>
+            <div class="form-group">
+              <label for="profTeachDesig">Designation</label>
+              <input type="text" id="profTeachDesig">
+            </div>
+            <div class="form-group">
+              <label for="profTeachDept">Department</label>
+              <input type="text" id="profTeachDept">
+            </div>
+            <div class="form-group">
+              <label for="profTeachSubjects">Subjects Taught</label>
+              <input type="text" id="profTeachSubjects">
+            </div>
+            <div class="form-group">
+              <label for="profTeachCabin">Office / Cabin Location</label>
+              <input type="text" id="profTeachCabin">
+            </div>
+            <div class="form-group">
+              <label for="profTeachEmail">Official Faculty Email</label>
+              <input type="email" id="profTeachEmail">
+            </div>
+            <div class="form-group">
+              <label for="profTeachPhone">Official Extension / Phone</label>
+              <input type="tel" id="profTeachPhone">
+            </div>
+            <div class="form-group full-width">
+              <label for="profTeachAddress">Campus Residential Address</label>
+              <input type="text" id="profTeachAddress">
+            </div>
+          </div>
+          <div class="form-actions-row">
+            <button type="submit" class="btn btn-primary btn-lg">Save Profile Changes 💾</button>
+            <button type="button" class="btn btn-secondary btn-lg" onclick="resetProfileToConfig()">Reset to config.js Defaults 🔄</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: SETTINGS (Meta / Facebook Style Rows)
+         ======================================================================= -->
+    <section class="page" id="pageSettings">
+      <div class="settings-container">
+        <!-- Appearance Group -->
+        <div class="settings-group">
+          <div class="settings-group-title">Appearance & Display</div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🌙</span>
+              <div class="settings-info">
+                <span class="settings-label">Dark Mode</span>
+                <span class="settings-subtext">Switch between light and high-contrast dark themes</span>
+              </div>
+            </div>
+            <label class="switch" aria-label="Toggle dark mode">
+              <input type="checkbox" id="settingDarkMode" onchange="toggleDarkMode(this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🎨</span>
+              <div class="settings-info">
+                <span class="settings-label">Accent Colour</span>
+                <span class="settings-subtext">Choose your theme highlights and active badges</span>
+              </div>
+            </div>
+            <div class="swatches-row">
+              <button type="button" class="accent-swatch active" style="background: #5b5ef0;" data-color="#5b5ef0" onclick="setAccentColor('#5b5ef0')" title="Indigo"></button>
+              <button type="button" class="accent-swatch" style="background: #f97316;" data-color="#f97316" onclick="setAccentColor('#f97316')" title="LPU Orange"></button>
+              <button type="button" class="accent-swatch" style="background: #10b981;" data-color="#10b981" onclick="setAccentColor('#10b981')" title="Emerald Green"></button>
+              <button type="button" class="accent-swatch" style="background: #ec4899;" data-color="#ec4899" onclick="setAccentColor('#ec4899')" title="Rose Pink"></button>
+              <button type="button" class="accent-swatch" style="background: #14b8a6;" data-color="#14b8a6" onclick="setAccentColor('#14b8a6')" title="Teal"></button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🔤</span>
+              <div class="settings-info">
+                <span class="settings-label">Text Size</span>
+                <span class="settings-subtext">Adjust the reading typography scale</span>
+              </div>
+            </div>
+            <select id="settingTextSize" onchange="setTextSize(this.value)" class="btn btn-secondary btn-sm">
+              <option value="small">Small</option>
+              <option value="medium" selected>Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🗂️</span>
+              <div class="settings-info">
+                <span class="settings-label">Compact Cards</span>
+                <span class="settings-subtext">Condense notice cards layout for high information density</span>
+              </div>
+            </div>
+            <label class="switch" aria-label="Toggle compact cards mode">
+              <input type="checkbox" id="settingCompactMode" onchange="toggleCompactMode(this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Notifications Group -->
+        <div class="settings-group">
+          <div class="settings-group-title">Notification Alerts & Followed Categories</div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">📢</span>
+              <div class="settings-info">
+                <span class="settings-label">New Notices Alerts</span>
+                <span class="settings-subtext">Receive alert badges when a new circular is published</span>
+              </div>
+            </div>
+            <label class="switch" aria-label="Toggle new notices alerts">
+              <input type="checkbox" id="settingNewNotices" checked onchange="saveNotificationToggles()">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">⚡</span>
+              <div class="settings-info">
+                <span class="settings-label">Urgent Circular Alerts</span>
+                <span class="settings-subtext">Highlight critical alerts and emergency warnings</span>
+              </div>
+            </div>
+            <label class="switch" aria-label="Toggle urgent alerts">
+              <input type="checkbox" id="settingUrgentAlerts" checked onchange="saveNotificationToggles()">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">⏰</span>
+              <div class="settings-info">
+                <span class="settings-label">Deadline Reminders</span>
+                <span class="settings-subtext">Upcoming fee deadlines and exam schedule countdowns</span>
+              </div>
+            </div>
+            <label class="switch" aria-label="Toggle deadline reminders">
+              <input type="checkbox" id="settingDeadlineReminders" checked onchange="saveNotificationToggles()">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+            <div class="settings-left">
+              <span class="settings-icon">📌</span>
+              <div class="settings-info">
+                <span class="settings-label">Categories I Follow</span>
+                <span class="settings-subtext">Choose which university circular categories generate alerts for you</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; padding-left: 46px;">
+              <label style="font-size: 13px; font-weight: 600;"><input type="checkbox" class="follow-cat-checkbox" value="Department" checked onchange="saveNotificationToggles()"> 🏛️ Department</label>
+              <label style="font-size: 13px; font-weight: 600;"><input type="checkbox" class="follow-cat-checkbox" value="Exams" checked onchange="saveNotificationToggles()"> 📝 Exams</label>
+              <label style="font-size: 13px; font-weight: 600;"><input type="checkbox" class="follow-cat-checkbox" value="Fees" checked onchange="saveNotificationToggles()"> 💳 Fees</label>
+              <label style="font-size: 13px; font-weight: 600;"><input type="checkbox" class="follow-cat-checkbox" value="Events" checked onchange="saveNotificationToggles()"> 🎪 Events</label>
+              <label style="font-size: 13px; font-weight: 600;"><input type="checkbox" class="follow-cat-checkbox" value="Placement" checked onchange="saveNotificationToggles()"> 💼 Placement</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy Group -->
+        <div class="settings-group">
+          <div class="settings-group-title">Privacy & Storage</div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🕒</span>
+              <div class="settings-info">
+                <span class="settings-label">Show Recently Viewed</span>
+                <span class="settings-subtext">Display your last 5 viewed circulars on the dashboard</span>
+              </div>
+            </div>
+            <label class="switch" aria-label="Toggle recently viewed list">
+              <input type="checkbox" id="settingShowRecent" checked onchange="saveNotificationToggles()">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🧹</span>
+              <div class="settings-info">
+                <span class="settings-label">Clear Recently Viewed</span>
+                <span class="settings-subtext">Wipe recent reading history from local storage</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="clearRecentHistory()">Clear History</button>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">⭐</span>
+              <div class="settings-info">
+                <span class="settings-label">Clear Saved Bookmarks</span>
+                <span class="settings-subtext">Remove all starred notices from bookmarks list</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="clearSavedBookmarks()">Clear Bookmarks</button>
+          </div>
+        </div>
+
+        <!-- Account Group -->
+        <div class="settings-group">
+          <div class="settings-group-title">Account Session</div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">👤</span>
+              <div class="settings-info">
+                <span class="settings-label">Edit Profile</span>
+                <span class="settings-subtext">Update academic and personal contact information</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="navigateToHash('#/profile')">Edit Profile →</button>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🚪</span>
+              <div class="settings-info">
+                <span class="settings-label">Log Out</span>
+                <span class="settings-subtext">Exit active session and return to the login screen</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="logoutUser()">Log Out</button>
+          </div>
+        </div>
+
+        <!-- Data Reset Management Group -->
+        <div class="settings-group">
+          <div class="settings-group-title">Data Management & Factory Reset</div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">📢</span>
+              <div class="settings-info">
+                <span class="settings-label">Manage Notices Dataset</span>
+                <span class="settings-subtext">Hide demo notices or remove user uploaded circulars</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="resetNoticesData('hide_demo')">Hide Demo</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="resetNoticesData('restore')">Restore Demo</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🔔</span>
+              <div class="settings-info">
+                <span class="settings-label">Manage Notifications Dataset</span>
+                <span class="settings-subtext">Clear notifications or restore sample alerts</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="resetNotifsData('hide_demo')">Hide Demo</button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="resetNotifsData('restore')">Restore Demo</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🔄</span>
+              <div class="settings-info">
+                <span class="settings-label">Reset All Sample Data</span>
+                <span class="settings-subtext">Restore all 5 notices, 12 notifications, bookmarks, and history</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="resetAllSampleData()">Reset Everything</button>
+          </div>
+        </div>
+
+        <!-- About Group -->
+        <div class="settings-group">
+          <div class="settings-group-title">About LPU Campus Hub</div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">🏛️</span>
+              <div class="settings-info">
+                <span class="settings-label">Lovely Professional University</span>
+                <span class="settings-subtext">Campus Notice and Circular Management System · v2.4.0 (2026 Edition)</span>
+              </div>
+            </div>
+            <span style="font-size: 13px; font-weight: 700; color: var(--accent);">TEAM WebX</span>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <span class="settings-icon">❤️</span>
+              <div class="settings-info">
+                <span class="settings-label">Development Team Credit</span>
+                <span class="settings-subtext">Crafted with dedication by TEAM WebX for academic excellence</span>
+              </div>
+            </div>
+            <span style="font-size: 12px; color: var(--muted);">Made with love ❤️</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: CONTACT US & HELP
+         ======================================================================= -->
+    <section class="page" id="pageContact">
+      <div class="contact-grid">
+        <!-- Left: Form -->
+        <div class="contact-card">
+          <h2 class="box-title" style="margin-bottom: 12px;">Contact Campus Support Desk</h2>
+          <p class="muted-note" style="margin-bottom: 18px;">Submit your grievance or inquiry directly to the university administration.</p>
+
+          <form onsubmit="sendContactEmail(event)">
+            <!-- Auto-filled user preview -->
+            <div class="read-only-preview">
+              <div class="preview-line"><strong>Applicant:</strong> <span id="contactUserName">Aditya Sharma</span> (<span id="contactUserRole">Student</span>)</div>
+              <div class="preview-line"><strong>ID:</strong> <span id="contactUserId">12204561</span> · <span id="contactUserDept">CSE</span></div>
+              <div class="preview-line"><strong>Email:</strong> <span id="contactUserEmail">aditya.12204561@lpu.in</span> · <span id="contactUserPhone">+91 98765 43210</span></div>
+              <a href="#/profile" style="font-size: 11.5px; margin-top: 4px;">Edit profile details →</a>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="contactDept">Department to Contact</label>
+              <select id="contactDept" required>
+                <option value="Academic Office">Academic Office</option>
+                <option value="Exam Department">Exam Department</option>
+                <option value="Finance Department">Finance & Accounts Department</option>
+                <option value="Placement Cell">Placement Cell (CPE)</option>
+                <option value="Student Affairs">Division of Student Affairs (DSA)</option>
+                <option value="Hostel Office">Hostel Administration</option>
+                <option value="IT Support">IT Support & UMS Helpdesk</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="contactIssue">Issue Category</label>
+              <select id="contactIssue" required>
+                <option value="Notice Problem">Notice / Circular Clarification</option>
+                <option value="Fee Issue">Fee Payment Discrepancy</option>
+                <option value="Exam Issue">Datesheet / Hall Ticket Grievance</option>
+                <option value="Technical Problem">Portal Technical Bug</option>
+                <option value="Suggestion">Suggestion & Feedback</option>
+                <option value="Other">Other Administrative Inquiry</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="contactPriority">Priority Level</label>
+              <select id="contactPriority">
+                <option value="Normal">Normal</option>
+                <option value="Urgent">Urgent (Requires immediate attention)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="contactSubject">Subject</label>
+              <input type="text" id="contactSubject" placeholder="Brief summary of your query" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="contactMessage">Detailed Description</label>
+              <textarea id="contactMessage" rows="4" placeholder="Explain the issue or inquiry clearly..." required></textarea>
+            </div>
+
+            <div class="read-only-preview" style="background: transparent; border-style: dashed; margin-bottom: 16px;">
+              <div class="preview-line"><strong>To:</strong> <span id="contactPreviewTo">support@lpu.co.in</span></div>
+              <div class="preview-line"><strong>From:</strong> <span id="contactPreviewFrom">student@lpu.in</span></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+              Send Email ✉️
+            </button>
+            <p style="font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 8px;">
+              Attach any supplementary files in your email app before sending.
+            </p>
+          </form>
+        </div>
+
+        <!-- Right: Official Help Desk Info & FAQ -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          <div class="contact-card">
+            <h3 class="widget-title" style="margin-bottom: 14px;">🏛️ University Administrative Office</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13.5px;">
+              <div><strong>Email:</strong> <span id="helpDeskEmail">support@lpu.co.in</span></div>
+              <div><strong>Helpline:</strong> <span id="helpDeskPhone">+91 1824 517000</span></div>
+              <div><strong>Operating Hours:</strong> <span id="helpDeskHours">Mon - Sat: 9:00 AM - 5:00 PM</span></div>
+              <div><strong>Campus Address:</strong> <span id="helpDeskLocation">Jalandhar - Delhi G.T. Road, Phagwara, Punjab 144411</span></div>
+            </div>
+          </div>
+
+          <!-- FAQ Accordion -->
+          <div class="faq-card">
+            <h3 class="widget-title" style="margin-bottom: 14px;">❓ Frequently Asked Questions</h3>
+
+            <details class="faq-item" open>
+              <summary>How frequently are campus circulars updated?</summary>
+              <p>Official circulars and examination notifications are published daily as soon as they are approved by the relevant school dean or registrar.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>What do the deadline countdown colors indicate?</summary>
+              <p>Green indicates over 7 days remaining, orange indicates 3 to 7 days, and red indicates 2 days or fewer before the deadline expires.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>How can faculty publish a circular?</summary>
+              <p>Faculty members logged in with the Teacher role can click "+ Post Notice" in the notices toolbar to publish official notices with attachments.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>Can I download circular attachments offline?</summary>
+              <p>Yes. Click on any notice to view details, then click "Download" on the attachment row to save the document to your device.</p>
+            </details>
+
+            <details class="faq-item">
+              <summary>Does this portal work in offline / private mode?</summary>
+              <p>Yes. The entire system is engineered with client-side storage fallbacks so it functions smoothly even in private browsing or offline modes.</p>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: POST / EDIT NOTICE (Teacher only)
+         ======================================================================= -->
+    <section class="page" id="pagePost">
+      <div class="post-form-card">
+        <h1 class="page-main-title" id="postFormHeading" style="margin-bottom: 6px;">Create New Campus Notice</h1>
+        <p class="muted-note" style="margin-bottom: 22px;">Publish an official university notice with auto-generated circular numbering and attachments.</p>
+
+        <!-- Inline validation error banner -->
+        <div class="form-errors-banner" id="postFormErrors" style="display: none;"></div>
+
+        <form onsubmit="submitNoticeForm(event)">
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label for="postTitle">Notice Title *</label>
+            <input type="text" id="postTitle" placeholder="e.g. End Semester Theory Examination Schedule Nov-Dec 2026" required>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="postCategory">Category *</label>
+              <select id="postCategory" onchange="updateCircularInput()" required>
+                <option value="Department">Department</option>
+                <option value="Exams">Exams</option>
+                <option value="Fees">Fees</option>
+                <option value="Events">Events</option>
+                <option value="Placement">Placement</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="postCircular">Circular Number (Auto-Generated)</label>
+              <input type="text" id="postCircular" readonly style="background: var(--border-subtle); cursor: not-allowed; font-family: monospace; font-weight: bold;">
+            </div>
+
+            <div class="form-group">
+              <label for="postDepartment">Issuing Department *</label>
+              <input type="text" id="postDepartment" placeholder="e.g. School of Computer Science & Engineering" required>
+            </div>
+
+            <div class="form-group">
+              <label for="postExpires">Last Date to Show (Expiry) *</label>
+              <input type="date" id="postExpires" required>
+              <div class="quick-date-buttons">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setExpiryQuick(1)">+1 Day</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setExpiryQuick(7)">+1 Week</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="setExpiryQuick(30)">+1 Month</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="postUrgent" style="width: auto;">
+              <span style="font-weight: 700; color: #dc2626;">⚡ Mark this notice as Urgent</span>
+            </label>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label for="postDescription">Circular Description & Detailed Instructions *</label>
+            <textarea id="postDescription" rows="5" placeholder="Enter complete guidelines, subject codes, reporting venue, instructions..." required></textarea>
+          </div>
+
+          <!-- Attachments File Upload -->
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label>Upload Official Attachments (Max 3 files, 1MB each)</label>
+            <input type="file" id="postFileInput" multiple onchange="handleFileUpload(event)">
+            <div class="chips-list-row" id="postAttachmentsList">
+              <span class="muted-note">No attachments added yet.</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" onclick="navigateToHash('#/notices')">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-lg" id="postSubmitBtn">Publish Notice 🚀</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: MY POSTS (Teacher only)
+         ======================================================================= -->
+    <section class="page" id="pageMyPosts">
+      <div class="notices-toolbar">
+        <div>
+          <h1 class="page-main-title">My Published Notices</h1>
+          <p class="muted-note">Manage, edit, or delete circulars authored by your account.</p>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="navigateToHash('#/post')">+ Post New Notice</button>
+      </div>
+
+      <div class="cards-grid" id="myPostsGrid">
+        <!-- Injected via post.js -->
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         PAGE: SAVED NOTICES (Bookmarks)
+         ======================================================================= -->
+    <section class="page" id="pageSaved">
+      <div class="notices-toolbar">
+        <div>
+          <h1 class="page-main-title">Saved Bookmarks ⭐</h1>
+          <p class="muted-note">Quick access to important circulars you have starred.</p>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="navigateToHash('#/notices')">← All Notices</button>
+      </div>
+
+      <div class="cards-grid" id="savedGrid">
+        <!-- Injected via notices.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       4. GLOBAL TOAST CONTAINER & CONFIRMATION MODAL
+       ========================================================================= -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="modal-backdrop" id="confirmModal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="confirmModalTitle">Confirm Action</h3>
+      <p class="modal-message" id="confirmModalMessage">Are you sure you want to proceed?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmModalBtn" onclick="executeConfirmAction()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       5. JAVASCRIPT FILES (STRICT ORDER SPECIFIED IN MASTER PROMPT)
+       1. config, 2. data, 3. storage, 4. auth, 5. notices, 6. post, 7. pages, 8. app
+       ========================================================================= -->
+  <!-- ⭐ LOAD ORDER MATTERS! config loads FIRST so every later file can read it;
+         app.js loads LAST because it uses functions from ALL the other files. -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/notices.js"></script>
+  <script src="js/post.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
